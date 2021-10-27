@@ -28,6 +28,34 @@
   color: #61dafb;
 }
 
+/* Custom styles */
+
+.taskItem {
+  cursor: pointer;
+}
+
+.remove-icon {
+  width: 20px;
+  height: 24px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 5px;
+  border: 1px solid rgba(169,169,169, 0);
+}
+
+.remove-icon:hover {
+  background-color:	#D3D3D3;
+  border: 1px solid rgba(169,169,169, 1);
+}
+
+.taskItem.active-task .remove-icon:hover {
+  background-color:	#000000;
+}
+
+
+/*****************/
+
 @keyframes App-logo-spin {
   from {
     transform: rotate(0deg);

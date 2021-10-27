@@ -3,8 +3,10 @@ from functools import reduce
 from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
+from flask_cors import CORS
 
 app = Flask(__name__)
+cors = CORS(app)
 
 app.config.from_object(os.environ['APP_SETTINGS'])
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -13,15 +15,28 @@ migrate = Migrate(app, db)
 
 from models import Task, Interface
 
+
 @app.route("/api/task/create/<task_name>")
 def create_task(task_name):
     try:
         task = Task(name=task_name)
         db.session.add(task)
         db.session.commit()
-        return jsonify({ id: task.id })
+        return jsonify({ 'id': task.id })
     except Exception as e:
         return(str(e))
+
+
+@app.route("/api/task/remove/<task_id>")
+def remove_task(task_id):
+    try:
+        task = Task.query.get(task_id)
+        db.session.delete(task)
+        db.session.commit()
+        return 'Success'
+    except Exception as e:
+        return (str(e))
+
 
 @app.route("/api/task/get_all")
 def get_all_tasks():
@@ -31,6 +46,7 @@ def get_all_tasks():
     except Exception as e:
         return(str(e))
 
+
 @app.route("/api/task/<task_id>/get_suitable_interface")
 def get_suitable_interface(task_id):
     try:
@@ -39,18 +55,23 @@ def get_suitable_interface(task_id):
         interfaces_for_task = Interface.query.filter_by(task_id=task_id).all()
         for interface in interfaces_for_task:
             interface.consistency = interface.calc_consistency()
-        db.session.commit()
 
-        # Ищем наиболее подходящий интерфейс (у которого consistency максимально)
-        most_suitable_interface = reduce(
-            lambda most_const_int, cur_int:
-                cur_int if cur_int.consistency > most_const_int.consistency else most_const_int,
-            interfaces_for_task,
-            interfaces_for_task[0]
-        )
-        return jsonify(most_suitable_interface.serialize())
+        most_suitable_interface = None
+        if len(interfaces_for_task):
+            db.session.commit()
+
+            # Ищем наиболее подходящий интерфейс (у которого consistency максимально)
+            most_suitable_interface = reduce(
+                lambda most_const_int, cur_int:
+                    cur_int if cur_int.consistency > most_const_int.consistency else most_const_int,
+                interfaces_for_task,
+                interfaces_for_task[0]
+            )
+
+        return jsonify(most_suitable_interface.serialize() if most_suitable_interface else None)
     except Exception as e:
         return(str(e))
+
 
 @app.route("/api/interface/attach", methods=['POST'])
 def attach_interfaces_to_task():
@@ -66,6 +87,7 @@ def attach_interfaces_to_task():
     except Exception as e:
         return(str(e))
 
+
 @app.route("/api/interface/<interface_id>/set_status/<status>", methods=['POST'])
 def update_interface_params(interface_id, status):
     try:
@@ -76,6 +98,7 @@ def update_interface_params(interface_id, status):
         return 'Success'
     except Exception as e:
         return(str(e))
+
 
 if __name__ == '__main__':
     app.run()
