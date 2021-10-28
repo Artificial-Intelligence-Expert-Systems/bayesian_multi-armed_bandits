@@ -22,7 +22,7 @@ def create_task(task_name):
         task = Task(name=task_name)
         db.session.add(task)
         db.session.commit()
-        return jsonify({ 'id': task.id })
+        return jsonify(task.serialize())
     except Exception as e:
         return(str(e))
 
@@ -47,6 +47,15 @@ def get_all_tasks():
         return(str(e))
 
 
+@app.route("/api/task/<task_id>/get_all_interfaces")
+def get_all_interfaces(task_id):
+    try:
+        interfaces = Interface.query.filter_by(task_id=task_id).all()
+        return jsonify([ interface.serialize() for interface in interfaces ])
+    except Exception as e:
+        return(str(e))
+
+
 @app.route("/api/task/<task_id>/get_suitable_interface")
 def get_suitable_interface(task_id):
     try:
@@ -54,7 +63,7 @@ def get_suitable_interface(task_id):
         #   на основе обновленных параметров
         interfaces_for_task = Interface.query.filter_by(task_id=task_id).all()
         for interface in interfaces_for_task:
-            interface.consistency = interface.calc_consistency()
+            interface.set_consistency()
 
         most_suitable_interface = None
         if len(interfaces_for_task):
@@ -73,19 +82,34 @@ def get_suitable_interface(task_id):
         return(str(e))
 
 
-@app.route("/api/interface/attach", methods=['POST'])
-def attach_interfaces_to_task():
-    interfaces = request.args.get('interfaces')
+@app.route("/api/interface/attach")
+def attach_interface_to_task():
+    name = request.args.get('name')
     task_id = request.args.get('taskId')
     try:
-        for name, url in interfaces.items():
-            interface = Interface(name=name, url=url, task_id=task_id)
-            db.session.add(interface)
+        interface = Interface(
+            name=name,
+            task_id=task_id
+        )
+        db.session.add(interface)
+        db.session.commit()
 
+        interface.create_url()
+        db.session.commit()
+        return jsonify(interface.serialize())
+    except Exception as e:
+        return(str(e))
+
+
+@app.route("/api/interface/<interface_id>/remove")
+def remove_interface(interface_id):
+    try:
+        interface = Interface.query.get(interface_id)
+        db.session.delete(interface)
         db.session.commit()
         return 'Success'
     except Exception as e:
-        return(str(e))
+        return (str(e))
 
 
 @app.route("/api/interface/<interface_id>/set_status/<status>", methods=['POST'])

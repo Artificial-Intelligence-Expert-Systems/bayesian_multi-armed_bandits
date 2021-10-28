@@ -34,8 +34,8 @@
   cursor: pointer;
 }
 
-.remove-icon {
-  width: 20px;
+.item-icon {
+  width: 24px;
   height: 24px;
   display: flex;
   justify-content: center;
@@ -44,12 +44,12 @@
   border: 1px solid rgba(169,169,169, 0);
 }
 
-.remove-icon:hover {
+.item-icon:hover {
   background-color:	#D3D3D3;
   border: 1px solid rgba(169,169,169, 1);
 }
 
-.taskItem.active-task .remove-icon:hover {
+.taskItem.active-task .item-icon:hover {
   background-color:	#000000;
 }
 
