@@ -1,6 +1,4 @@
 from app import db
-from scipy.stats import beta
-import numpy as np
 
 
 class Task(db.Model):
@@ -15,10 +13,10 @@ class Task(db.Model):
 
     def __repr__(self):
         return '<id {}>'.format(self.id)
-    
+
     def serialize(self):
         return {
-            'id': self.id, 
+            'id': self.id,
             'name': self.name
         }
 
@@ -30,35 +28,27 @@ class Interface(db.Model):
     url = db.Column(db.String())
     name = db.Column(db.String())
     task_id = db.Column(db.Integer, db.ForeignKey('task.id'), nullable=False)
-    consistency = db.Column(db.Float)
-    a_param = db.Column(db.Integer)
-    b_param = db.Column(db.Integer)
+    amount_task_done = db.Column(db.Integer)
+    amount_task_failed = db.Column(db.Integer)
 
     def __init__(self, name, task_id):
         self.name = name
         self.task_id = task_id
-        self.a_param = 1
-        self.b_param = 1
-        self.set_consistency()
+        self.amount_task_done = 1
+        self.amount_task_failed = 1
 
     def __repr__(self):
         return '<id {}>'.format(self.id)
 
     def create_url(self):
-        self.url = f'http://localhost:3000/task/{self.task_id}/interface/{self.id}'
-    
-    def set_consistency(self):
-        probabilities = np.linspace(0, 1, 100)
-        distribution = beta(self.a_param, self.b_param).pdf(probabilities)
-        self.consistency = probabilities[ np.argmax(distribution) ]
+        self.url = f'/task/{self.task_id}/interface/{self.id}'
 
     def serialize(self):
         return {
-            'id': self.id, 
+            'id': self.id,
             'name': self.name,
             'url': self.url,
             'task_id': self.task_id,
-            'consistency': self.consistency,
-            'a_param': self.a_param,
-            'b_param': self.b_param
+            'amount_task_done': self.amount_task_done,
+            'amount_task_failed': self.amount_task_failed
         }

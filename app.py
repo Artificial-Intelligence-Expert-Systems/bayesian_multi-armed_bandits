@@ -1,12 +1,12 @@
 import os
-from functools import reduce
 from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_cors import CORS
+import numpy as np
 
 app = Flask(__name__)
-cors = CORS(app)
+CORS(app)
 
 app.config.from_object(os.environ['APP_SETTINGS'])
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -59,25 +59,16 @@ def get_all_interfaces(task_id):
 @app.route("/api/task/<task_id>/get_suitable_interface")
 def get_suitable_interface(task_id):
     try:
-        # Пересчитываем вероятность того, что интерфейс подходит
-        #   на основе обновленных параметров
         interfaces_for_task = Interface.query.filter_by(task_id=task_id).all()
-        for interface in interfaces_for_task:
-            interface.set_consistency()
 
-        most_suitable_interface = None
-        if len(interfaces_for_task):
-            db.session.commit()
+        if not len(interfaces_for_task):
+            return jsonify(None)
 
-            # Ищем наиболее подходящий интерфейс (у которого consistency максимально)
-            most_suitable_interface = reduce(
-                lambda most_const_int, cur_int:
-                    cur_int if cur_int.consistency > most_const_int.consistency else most_const_int,
-                interfaces_for_task,
-                interfaces_for_task[0]
-            )
+        done = list(map(lambda interface: interface.amount_task_done, interfaces_for_task))
+        failed = list(map(lambda interface: interface.amount_task_failed, interfaces_for_task))
+        best_interface_index = np.argmax(np.random.beta(done, failed))
 
-        return jsonify(most_suitable_interface.serialize() if most_suitable_interface else None)
+        return jsonify(interfaces_for_task[best_interface_index].serialize())
     except Exception as e:
         return(str(e))
 
@@ -112,12 +103,12 @@ def remove_interface(interface_id):
         return (str(e))
 
 
-@app.route("/api/interface/<interface_id>/set_status/<status>", methods=['POST'])
+@app.route("/api/interface/<interface_id>/set_status/<status>")
 def update_interface_params(interface_id, status):
     try:
         interface = Interface.query.get(interface_id)
-        interface.a_param += status
-        interface.b_param = interface.b_param + 1 - status
+        interface.amount_task_done += int(status)
+        interface.amount_task_failed = interface.amount_task_failed + 1 - int(status)
         db.session.commit()
         return 'Success'
     except Exception as e:

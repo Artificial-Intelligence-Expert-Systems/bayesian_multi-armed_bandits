@@ -21,6 +21,8 @@ import {
     MDBModalBody
 } from 'mdb-react-ui-kit';
 import Loader from "react-loader-spinner";
+import Iframe from 'react-iframe'
+import { useHistory } from 'react-router-dom';
 
 const MainPage = ({ getTasks, tasks, getBestInterface,
                     bestInterface, taskLoader, interfaceLoader,
@@ -106,7 +108,10 @@ const MainPage = ({ getTasks, tasks, getBestInterface,
                 </MDBCol>
                 <MDBCol size='md-6'>
                     <h3 className='pt-2'>Лучший интерфейс</h3>
-                    <InterfaceCard bestInterface={bestInterface} loading={taskLoader || interfaceLoader}/>
+                    <InterfaceCard
+                        taskName={tasks.find((task) => task.id === activeTask)?.name}
+                        bestInterface={bestInterface}
+                        loading={taskLoader || interfaceLoader}/>
                 </MDBCol>
             </MDBRow>
 
@@ -243,7 +248,9 @@ export const TaskModal = ({ setTaskEditing, task, interfaces, getInterfaces, rem
 }
 
 
-export const InterfaceCard = ({bestInterface, loading}) => {
+export const InterfaceCard = ({bestInterface, loading, taskName}) => {
+    const history = useHistory();
+
     if (loading) return <p className='lead'>
         Загрузка задачи...
     </p>
@@ -252,12 +259,18 @@ export const InterfaceCard = ({bestInterface, loading}) => {
         return (
             <div className="card">
                 <div className="card-body">
-                    <h5 className="card-title">Card title</h5>
-                    <p className="card-text">
-                        Some quick example text to build on the card title and make up the bulk of the
-                        card's content.
-                    </p>
-                    <button type="button" className="btn btn-primary">Button</button>
+                    <h5 className="card-title">Предпросмотр (кликать нельзя)</h5>
+                    <Iframe url={ `${bestInterface.url}?taskName=${taskName}&interfaceName=${bestInterface.name}` }
+                            height="250px"
+                            id="myId"
+                            className="interface-iframe"
+                            display="initial"
+                            position="relative"/>
+                    <button onClick={() =>
+                        history.push(`${bestInterface.url}?taskName=${taskName}&interfaceName=${bestInterface.name}`)
+                    }
+                            type="button"
+                            className="btn btn-primary mt-3">Перейти к интерфейсу</button>
                 </div>
             </div>
         );

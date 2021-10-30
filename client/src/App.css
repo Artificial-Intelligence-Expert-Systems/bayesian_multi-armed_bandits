@@ -53,6 +53,12 @@
   background-color:	#000000;
 }
 
+.interface-iframe {
+  border: 1px solid #282c34;
+  width: 100%;
+  pointer-events: none;
+}
+
 
 /*****************/
 

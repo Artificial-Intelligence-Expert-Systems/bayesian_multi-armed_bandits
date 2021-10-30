@@ -98,3 +98,7 @@ export const getBestInterface = (taskId) => {
         })
     }
 }
+
+export const sendInterfaceStatus = (interfaceId, status) => {
+    return axios.get(`${baseUrl}/api/interface/${interfaceId}/set_status/${status}`)
+}
