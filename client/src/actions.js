@@ -9,7 +9,7 @@ export const REMOVE_TASK = 'TASK/REMOVE';
 
 export const GET_INTERFACE = 'INTERFACE/GET_THE_BEST';
 export const TOGGLE_LOADER_INTERFACE = 'TOGGLE_LOADER/INTERFACE';
-
+export const GET_INTERFACE_STATS = 'INTERFACE/GET_INTERFACE_STATS';
 
 export const GET_INTERFACES = 'INTERFACES/ALL';
 export const TOGGLE_LOADER_ALL_INTERFACES = 'TOGGLE_LOADER/ALL_INTERFACES';
@@ -94,6 +94,17 @@ export const getBestInterface = (taskId) => {
 
         dispatch({
             type: GET_INTERFACE,
+            payload: response.data
+        })
+    }
+}
+
+export const getInterfaceStats = (taskId) => {
+    return async (dispatch) => {
+        const response = await axios.get(`${baseUrl}/api/task/${taskId}/get_interface_stats`)
+
+        dispatch({
+            type: GET_INTERFACE_STATS,
             payload: response.data
         })
     }

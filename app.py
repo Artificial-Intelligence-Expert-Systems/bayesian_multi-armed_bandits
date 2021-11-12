@@ -73,6 +73,20 @@ def get_suitable_interface(task_id):
         return(str(e))
 
 
+@app.route("/api/task/<task_id>/get_interface_stats")
+def get_interface_stats(task_id):
+    try:
+        interfaces_for_task = Interface.query.filter_by(task_id=task_id).all()
+
+        if not len(interfaces_for_task):
+            return jsonify(None)
+
+        ready = [interface.serialize() for interface in interfaces_for_task]
+        return jsonify(ready)
+    except Exception as e:
+        return(str(e))
+
+
 @app.route("/api/interface/attach")
 def attach_interface_to_task():
     name = request.args.get('name')

@@ -11,7 +11,7 @@ import { Provider } from 'react-redux'
 import {
     ADD_INTERFACE,
     ADD_TASK,
-    GET_INTERFACE, GET_INTERFACES,
+    GET_INTERFACE, GET_INTERFACE_STATS, GET_INTERFACES,
     GET_TASKS, REMOVE_INTERFACE,
     REMOVE_TASK, TOGGLE_LOADER_ALL_INTERFACES,
     TOGGLE_LOADER_INTERFACE,
@@ -22,6 +22,7 @@ const initialState = {
     tasks: [],
     interface: null,
     interfacesForTask: [],
+    stats: [],
     loaders: {
         tasks: false,
         interface: false,
@@ -92,6 +93,11 @@ const rootReducer = function(state = initialState, action) {
                     ...state.loaders,
                     interfacesForTask: !state.loaders.interfacesForTask
                 }
+            }
+        case GET_INTERFACE_STATS:
+            return {
+                ...state,
+                stats: action.payload
             }
         default: return state;
     }

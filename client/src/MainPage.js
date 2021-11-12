@@ -1,7 +1,7 @@
 import {connect} from 'react-redux'
 import {
     createNewTask, getTasks,
-    getBestInterface, removeTask, attachInterface, removeInterface, getInterfaces
+    getBestInterface, removeTask, attachInterface, removeInterface, getInterfaces, getInterfaceStats
 } from "./actions";
 import {useEffect, useState} from "react";
 import {
@@ -26,7 +26,7 @@ import { useHistory } from 'react-router-dom';
 
 const MainPage = ({ getTasks, tasks, getBestInterface,
                     bestInterface, taskLoader, interfaceLoader,
-                    createNewTask, removeTask,
+                    createNewTask, removeTask, getInterfaceStats, stats,
 
                     interfaces, attachInterface, removeInterface, getInterfaces
                   }) => {
@@ -45,6 +45,7 @@ const MainPage = ({ getTasks, tasks, getBestInterface,
     const chooseTask = (taskId) => {
         setActiveTask(taskId);
         getBestInterface(taskId);
+        getInterfaceStats(taskId);
     }
 
     const createTask = () => {
@@ -112,6 +113,21 @@ const MainPage = ({ getTasks, tasks, getBestInterface,
                         taskName={tasks.find((task) => task.id === activeTask)?.name}
                         bestInterface={bestInterface}
                         loading={taskLoader || interfaceLoader}/>
+                </MDBCol>
+            </MDBRow>
+            <MDBRow>
+                <MDBCol size='md-6'></MDBCol>
+                <MDBCol size='md-6'>
+                    <h3 className='pt-5'>Статистика по интерфейсам</h3>
+                    {
+                        (stats || []).map((info) => {
+                            return <div className='d-flex justify-content-between'>
+                                <div style={{ width: '60%' }}>{ info.name }</div>
+                                <div style={{ width: '20%' }}>Решена { info.amount_task_done } раз</div>
+                                <div style={{ width: '20%' }}>Нерешена { info.amount_task_failed } раз</div>
+                            </div>
+                        })
+                    }
                 </MDBCol>
             </MDBRow>
 
@@ -286,9 +302,11 @@ export default connect((state) => ({
     bestInterface: state.interface,
     taskLoader: state.loaders.tasks,
     interfaceLoader: state.loaders.interface,
-    interfaces: state.interfacesForTask
+    interfaces: state.interfacesForTask,
+    stats: state.stats
 }), {
     getTasks, getBestInterface,
     createNewTask, removeTask,
-    removeInterface, attachInterface, getInterfaces
+    removeInterface, attachInterface,
+    getInterfaces, getInterfaceStats
 })(MainPage);
