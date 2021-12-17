@@ -1,5 +1,7 @@
 from app import db
 
+from scipy.stats import beta
+import numpy as np
 
 class Task(db.Model):
     __tablename__ = 'task'
@@ -28,6 +30,7 @@ class Interface(db.Model):
     url = db.Column(db.String())
     name = db.Column(db.String())
     task_id = db.Column(db.Integer, db.ForeignKey('task.id'), nullable=False)
+    consistency = db.Column(db.Integer)
     amount_task_done = db.Column(db.Integer)
     amount_task_failed = db.Column(db.Integer)
 
@@ -36,12 +39,18 @@ class Interface(db.Model):
         self.task_id = task_id
         self.amount_task_done = 1
         self.amount_task_failed = 1
+        self.consistency = self.set_consistency()
 
     def __repr__(self):
         return '<id {}>'.format(self.id)
 
     def create_url(self):
         self.url = f'/task/{self.task_id}/interface/{self.id}'
+
+    def set_consistency(self):
+        probabilities = np.linspace(0, 1, 100)
+        distribution = beta(self.amount_task_done, self.amount_task_failed).pdf(probabilities)
+        self.consistency = probabilities[ np.argmax(distribution) ]
 
     def serialize(self):
         return {

@@ -3,6 +3,7 @@ from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_cors import CORS
+from functools import reduce
 import numpy as np
 
 app = Flask(__name__)
@@ -56,19 +57,44 @@ def get_all_interfaces(task_id):
         return(str(e))
 
 
+# @app.route("/api/task/<task_id>/get_suitable_interface")
+# def get_suitable_interface(task_id):
+#     try:
+#         interfaces_for_task = Interface.query.filter_by(task_id=task_id).all()
+#
+#         if not len(interfaces_for_task):
+#             return jsonify(None)
+#
+#         done = list(map(lambda interface: interface.amount_task_done, interfaces_for_task))
+#         failed = list(map(lambda interface: interface.amount_task_failed, interfaces_for_task))
+#         best_interface_index = np.argmax(np.random.beta(done, failed))
+#
+#         return jsonify(interfaces_for_task[best_interface_index].serialize())
+#     except Exception as e:
+#         return(str(e))
+
 @app.route("/api/task/<task_id>/get_suitable_interface")
 def get_suitable_interface(task_id):
     try:
+        # Пересчитываем вероятность того, что интерфейс подходит
+        #   на основе обновленных параметров
         interfaces_for_task = Interface.query.filter_by(task_id=task_id).all()
+        for interface in interfaces_for_task:
+            interface.set_consistency()
 
-        if not len(interfaces_for_task):
-            return jsonify(None)
+        most_suitable_interface = None
+        if len(interfaces_for_task):
+            db.session.commit()
 
-        done = list(map(lambda interface: interface.amount_task_done, interfaces_for_task))
-        failed = list(map(lambda interface: interface.amount_task_failed, interfaces_for_task))
-        best_interface_index = np.argmax(np.random.beta(done, failed))
+            # Ищем наиболее подходящий интерфейс (у которого consistency максимально)
+            most_suitable_interface = reduce(
+                lambda most_const_int, cur_int:
+                    cur_int if cur_int.consistency > most_const_int.consistency else most_const_int,
+                interfaces_for_task,
+                interfaces_for_task[0]
+            )
 
-        return jsonify(interfaces_for_task[best_interface_index].serialize())
+        return jsonify(most_suitable_interface.serialize() if most_suitable_interface else None)
     except Exception as e:
         return(str(e))
 
